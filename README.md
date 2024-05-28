@@ -20,7 +20,7 @@ The Rick and Morty App is a React application that provides information about ch
 ### Installation
 
 1.  Clone the repository:
-    `git clone https://github.com/your-username/rick-and-morty-app.git`
+    `git clone https://github.com/soiloui/rick-and-morty-app.git`
 
 2.  Navigate into repository:
     `cd rick-and-morty-app`
