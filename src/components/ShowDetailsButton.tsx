@@ -37,7 +37,6 @@ const ShowDetailsButton = ({ params }: Props) => {
   };
 
   const fetchLocationData = () => {
-    console.log(currentCharacter);
     if (!currentCharacter) return null;
     return axios
       .get(`${currentCharacter.location.url}`)
