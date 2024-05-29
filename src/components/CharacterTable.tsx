@@ -1,20 +1,37 @@
 import { DataGrid } from "@mui/x-data-grid";
-import { useEffect, useState } from "react";
 import axios from "axios";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import useCharacterColumns from "../utils/hooks/useCharacterColumns";
-import { CharacterAPIResponse } from "../types/RickAndMortyAPI";
+import { Character, CharacterAPIResponse } from "../types/RickAndMortyAPI";
 import { RICK_AND_MORTY_CHARACTERS_API_URL } from "../utils/constants";
 import { toast } from "react-toastify";
-import { Button, Skeleton } from "@mui/material";
+import { Box, Button, Skeleton } from "@mui/material";
+
+interface PageParams {
+  pageParam: number;
+}
 
 const CharacterTable = () => {
-  const fetchCharactersData = (): Promise<CharacterAPIResponse> =>
-    axios.get(RICK_AND_MORTY_CHARACTERS_API_URL).then((response) => response.data);
+  const fetchCharactersData = async ({
+    pageParam,
+  }: PageParams): Promise<CharacterAPIResponse> => {
+    const res = await axios.get(
+      RICK_AND_MORTY_CHARACTERS_API_URL + `/?page=${pageParam}`
+    );
+    return res.data;
+  };
 
-  const { isPending, data, isError, error, refetch } = useQuery({
+  const { isPending, data, isError, error, refetch, fetchNextPage } = useInfiniteQuery({
     queryKey: ["characterData"],
     queryFn: fetchCharactersData,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, pages, lastPageParam) => {
+      if (lastPage.info.pages - 1 < lastPageParam) {
+        return undefined;
+      }
+
+      return lastPageParam + 1;
+    },
   });
 
   const handleReload = () => {
@@ -27,9 +44,12 @@ const CharacterTable = () => {
 
   if (isPending)
     return (
-      <>
-        <Skeleton variant="rounded" width="100%" height={TABLE_HEIGHT} />;
-      </>
+      <Skeleton
+        variant="rounded"
+        width="100%"
+        height={TABLE_HEIGHT}
+        sx={{ minHeight: MIN_TABLE_HEIGHT }}
+      />
     );
 
   if (isError) {
@@ -45,13 +65,28 @@ const CharacterTable = () => {
     );
   }
 
-  const rows = data.results.map((result) => {
-    return { ...result };
+  const rows: Character[] = [];
+
+  data.pages.forEach((page) => {
+    page.results.forEach((result) => {
+      rows.push({ ...result });
+    });
   });
+
+  const handleGridLazyLoading = (gridState: any) => {
+    const rowsCount = gridState.rows.totalRowCount;
+    const currPage = gridState.pagination.paginationModel.page + 1;
+    const pageSize = gridState.pagination.paginationModel.pageSize;
+    const visibleRows = currPage * pageSize;
+
+    if (visibleRows + pageSize > rowsCount) {
+      fetchNextPage();
+    }
+  };
 
   return (
     <>
-      <div style={{ minHeight: MIN_TABLE_HEIGHT, height: TABLE_HEIGHT, width: "100%" }}>
+      <Box sx={{ minHeight: MIN_TABLE_HEIGHT, height: TABLE_HEIGHT, width: "100%" }}>
         <DataGrid
           rows={rows}
           columns={columns}
@@ -60,10 +95,11 @@ const CharacterTable = () => {
               paginationModel: { page: 0, pageSize: 10 },
             },
           }}
-          pageSizeOptions={[5, 10, 20, 50]}
+          pageSizeOptions={[10, 20, 50]}
           rowSelection={false}
+          onStateChange={handleGridLazyLoading}
         />
-      </div>
+      </Box>
     </>
   );
 };
