@@ -9,9 +9,12 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import { CharacterProvider } from "./components/CharacterProvider";
 import CharacterDetails from "./components/CharacterDetails";
 import Background from "./components/Background";
+import useIntroAnimation from "./utils/hooks/useIntroAnimation";
 
 const App = () => {
   const queryClient = new QueryClient();
+
+  useIntroAnimation();
 
   return (
     <>

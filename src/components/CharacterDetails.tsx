@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import BootstrapDialog from "./BootstrapDialog";
 import { useEffect, useState } from "react";
+import useCharacterDetailsOpenAnimation from "../utils/hooks/useCharacterDetailsOpenAnimation";
 
 const CharacterDetails = () => {
   const theme = useTheme();
@@ -22,6 +23,7 @@ const CharacterDetails = () => {
   const [isOriginExpanded, setIsOriginExpanded] = useState(false);
   const { open, setOpen, handleClose, currentCharacter, currentLocation, currentOrigin } =
     useCharacterContext();
+  useCharacterDetailsOpenAnimation();
 
   useEffect(() => {
     if (!open) {
@@ -50,7 +52,12 @@ const CharacterDetails = () => {
 
   return (
     <>
-      <BootstrapDialog onClose={handleClose} open={open} sx={{ width: "100%" }}>
+      <BootstrapDialog
+        className="character-details"
+        onClose={handleClose}
+        open={open}
+        sx={{ width: "100%" }}
+      >
         <DialogTitle sx={{ m: 0, p: 2 }} textAlign="center">
           {name}
         </DialogTitle>
@@ -71,6 +78,7 @@ const CharacterDetails = () => {
         <DialogContent dividers>
           {image && (
             <Box
+              className="character-presentation"
               sx={{
                 display: "flex",
                 flexDirection: "column",
@@ -98,6 +106,7 @@ const CharacterDetails = () => {
             </Box>
           )}
           <Box
+            className="character-info"
             sx={{
               display: "flex",
               flexDirection: "column",
