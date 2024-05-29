@@ -2,22 +2,17 @@ import { Visibility } from "@mui/icons-material";
 import { Button } from "@mui/material";
 import { useCharacterContext } from "./CharacterProvider";
 import { Character } from "../types/RickAndMortyAPI";
-import axios from "axios";
-import { useQuery } from "@tanstack/react-query";
 import { GridRenderCellParams, GridTreeNodeWithRender } from "@mui/x-data-grid";
+import useGetCharactersDetails from "../utils/hooks/useGetCharactersDetails";
 
 interface Props {
   params: GridRenderCellParams<any, any, any, GridTreeNodeWithRender>;
 }
 
 const ShowDetailsButton = ({ params }: Props) => {
-  const {
-    setOpen,
-    currentCharacter,
-    setCurrentCharacter,
-    setCurrentLocation,
-    setCurrentOrigin,
-  } = useCharacterContext();
+  const { setOpen, setCurrentCharacter, setCurrentLocation, setCurrentOrigin } =
+    useCharacterContext();
+  const { refetchLocationData, refetchOriginData } = useGetCharactersDetails();
 
   const handleShowDetails = (character: Character) => {
     setCurrentCharacter(character);
@@ -35,32 +30,6 @@ const ShowDetailsButton = ({ params }: Props) => {
       });
     }, 0);
   };
-
-  const fetchLocationData = () => {
-    if (!currentCharacter) return null;
-    return axios
-      .get(`${currentCharacter.location.url}`)
-      .then((response) => response.data);
-  };
-
-  const { refetch: refetchLocationData } = useQuery({
-    queryKey: ["location"],
-    queryFn: fetchLocationData,
-    refetchOnWindowFocus: false,
-    enabled: false,
-  });
-
-  const fetchOriginData = () => {
-    if (!currentCharacter) return null;
-    return axios.get(`${currentCharacter.origin.url}`).then((response) => response.data);
-  };
-
-  const { refetch: refetchOriginData } = useQuery({
-    queryKey: ["origin"],
-    queryFn: fetchOriginData,
-    refetchOnWindowFocus: false,
-    enabled: false,
-  });
 
   return (
     <>

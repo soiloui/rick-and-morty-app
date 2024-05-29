@@ -1,46 +1,31 @@
 import { DataGrid } from "@mui/x-data-grid";
-import axios from "axios";
-import { useInfiniteQuery } from "@tanstack/react-query";
 import useCharacterColumns from "../utils/hooks/useCharacterColumns";
-import { Character, CharacterAPIResponse } from "../types/RickAndMortyAPI";
-import { RICK_AND_MORTY_CHARACTERS_API_URL } from "../utils/constants";
+import { Character } from "../types/RickAndMortyAPI";
 import { toast } from "react-toastify";
 import { Box, Button, Skeleton } from "@mui/material";
-
-interface PageParams {
-  pageParam: number;
-}
+import useGetCharactersData from "../utils/hooks/useGetCharactersData";
 
 const CharacterTable = () => {
-  const fetchCharactersData = async ({
-    pageParam,
-  }: PageParams): Promise<CharacterAPIResponse> => {
-    const res = await axios.get(
-      RICK_AND_MORTY_CHARACTERS_API_URL + `/?page=${pageParam}`
-    );
-    return res.data;
-  };
-
-  const { isPending, data, isError, error, refetch, fetchNextPage } = useInfiniteQuery({
-    queryKey: ["characterData"],
-    queryFn: fetchCharactersData,
-    initialPageParam: 1,
-    getNextPageParam: (lastPage, pages, lastPageParam) => {
-      if (lastPage.info.pages - 1 < lastPageParam) {
-        return undefined;
-      }
-
-      return lastPageParam + 1;
-    },
-  });
+  const { isPending, data, isError, error, refetch, fetchNextPage } = useGetCharactersData();
+  const { columns } = useCharacterColumns();
 
   const handleReload = () => {
     refetch();
   };
 
+  const handleGridLazyLoading = (gridState: any) => {
+    const rowsCount = gridState.rows.totalRowCount;
+    const currPage = gridState.pagination.paginationModel.page + 1;
+    const pageSize = gridState.pagination.paginationModel.pageSize;
+    const visibleRows = currPage * pageSize;
+
+    if (visibleRows + pageSize > rowsCount) {
+      fetchNextPage();
+    }
+  };
+
   const MIN_TABLE_HEIGHT = 300;
   const TABLE_HEIGHT = "50vh";
-  const { columns } = useCharacterColumns();
 
   if (isPending)
     return (
@@ -72,17 +57,6 @@ const CharacterTable = () => {
       rows.push({ ...result });
     });
   });
-
-  const handleGridLazyLoading = (gridState: any) => {
-    const rowsCount = gridState.rows.totalRowCount;
-    const currPage = gridState.pagination.paginationModel.page + 1;
-    const pageSize = gridState.pagination.paginationModel.pageSize;
-    const visibleRows = currPage * pageSize;
-
-    if (visibleRows + pageSize > rowsCount) {
-      fetchNextPage();
-    }
-  };
 
   return (
     <>
